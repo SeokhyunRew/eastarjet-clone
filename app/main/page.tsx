@@ -275,19 +275,19 @@ export default function MainPage() {
           <div className="bg-white rounded-lg shadow-lg p-2 space-y-2">
             <Button variant="ghost" size="sm" className="w-full text-xs flex flex-col items-center p-2">
               <Search className="w-4 h-4 mb-1" />
-              예약조회
+              부가서비스
             </Button>
             <Button variant="ghost" size="sm" className="w-full text-xs flex flex-col items-center p-2">
               <Plane className="w-4 h-4 mb-1" />
-              체크인
+              예약조회
             </Button>
             <Button variant="ghost" size="sm" className="w-full text-xs flex flex-col items-center p-2">
               <Calendar className="w-4 h-4 mb-1" />
-              공항이용
+              체크인
             </Button>
             <Button variant="ghost" size="sm" className="w-full text-xs flex flex-col items-center p-2">
               <Users className="w-4 h-4 mb-1" />
-              무기체크
+              공항이용팁
             </Button>
           </div>
         </div>

@@ -35,6 +35,7 @@ export default function MainPage() {
   const [selectedCoupon, setSelectedCoupon] = useState<any>(null)
   const [activeTab, setActiveTab] = useState("항공")
   const router = useRouter()
+  const [clickedStars, setClickedStars] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     // Check if user is logged in
@@ -62,18 +63,24 @@ export default function MainPage() {
   }, [router])
 
   const handleStarClick = (starId: number) => {
-    setStars((prev) => prev.map((star) => (star.id === starId ? { ...star, found: true } : star)))
+    // 클릭 애니메이션 트리거
+    setClickedStars((prev) => new Set(prev).add(starId))
 
-    const newFoundCount = foundStars + 1
-    setFoundStars(newFoundCount)
+    // 1초 후 별을 찾음 상태로 변경하고 모달 표시
+    setTimeout(() => {
+      setStars((prev) => prev.map((star) => (star.id === starId ? { ...star, found: true } : star)))
 
-    if (newFoundCount === 1) {
-      setModalContent("1/2 찾음")
-      setShowModal(true)
-    } else if (newFoundCount === 2) {
-      setModalContent("다 찾음")
-      setShowModal(true)
-    }
+      const newFoundCount = foundStars + 1
+      setFoundStars(newFoundCount)
+
+      if (newFoundCount === 1) {
+        setModalContent("축하합니다~!!\n숨겨진 Star를 찾으셨습니다.\n찾은 Star 개수: 1/2")
+        setShowModal(true)
+      } else if (newFoundCount === 2) {
+        setModalContent("축하합니다~!!\n숨겨진 Star를 '모두' 찾으셨습니다.\n찾은 Star 개수: 2/2")
+        setShowModal(true)
+      }
+    }, 1000)
   }
 
   const handleCouponCheck = () => {
@@ -255,17 +262,60 @@ export default function MainPage() {
           {stars.map(
               (star) =>
                   !star.found && (
-                      <button
+                      <div
                           key={star.id}
-                          onClick={() => handleStarClick(star.id)}
-                          className="absolute z-20 transform -translate-x-1/2 -translate-y-1/2 hover:scale-110 transition-transform animate-pulse"
+                          className="absolute z-20 transform -translate-x-1/2 -translate-y-1/2"
                           style={{
                             top: `${star.top}%`,
                             left: `${star.left}%`,
                           }}
                       >
-                        <Star className="w-6 h-6 text-yellow-500 fill-yellow-400 cursor-pointer drop-shadow-lg" />
-                      </button>
+                        <button
+                            onClick={() => handleStarClick(star.id)}
+                            className={`relative transition-all duration-300 ${
+                                clickedStars.has(star.id) ? "animate-bounce scale-150" : "hover:scale-110 animate-pulse"
+                            }`}
+                            disabled={clickedStars.has(star.id)}
+                        >
+                          <Star
+                              className={`w-6 h-6 text-yellow-500 fill-yellow-400 cursor-pointer drop-shadow-lg transition-all duration-500 ${
+                                  clickedStars.has(star.id) ? "animate-spin scale-150 opacity-50" : ""
+                              }`}
+                          />
+
+                          {/* 클릭 시 반짝이는 효과 */}
+                          {clickedStars.has(star.id) && (
+                              <>
+                                {/* 중앙 폭발 효과 */}
+                                <div className="absolute inset-0 animate-ping">
+                                  <Star className="w-6 h-6 text-yellow-300 fill-yellow-200 opacity-75" />
+                                </div>
+
+                                {/* 파티클 효과 */}
+                                <div className="absolute inset-0 pointer-events-none">
+                                  {[...Array(12)].map((_, i) => (
+                                      <div
+                                          key={i}
+                                          className="absolute w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full animate-ping"
+                                          style={{
+                                            top: "50%",
+                                            left: "50%",
+                                            transform: `translate(-50%, -50%) rotate(${i * 30}deg) translateY(-${20 + i * 2}px)`,
+                                            animationDelay: `${i * 0.05}s`,
+                                            animationDuration: "0.8s",
+                                          }}
+                                      />
+                                  ))}
+                                </div>
+
+                                {/* 원형 확산 효과 */}
+                                <div className="absolute inset-0 animate-ping opacity-30">
+                                  <div className="w-12 h-12 border-2 border-yellow-400 rounded-full transform -translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2"></div>
+                                </div>
+                              </>
+                          )}
+                        </button>
+                      </div>
                   ),
           )}
         </div>
@@ -294,15 +344,17 @@ export default function MainPage() {
 
         {/* Modal */}
         <Dialog open={showModal} onOpenChange={setShowModal}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md bg-red-50 border-red-200">
             <DialogHeader>
-              <DialogTitle className="text-center text-2xl">{modalContent}</DialogTitle>
+              <DialogTitle className="text-center text-xl leading-relaxed whitespace-pre-line text-red-800">
+                {modalContent}
+              </DialogTitle>
             </DialogHeader>
             <div className="flex flex-col items-center space-y-4 py-4">
               {foundStars === 2 && !showCoupon && (
                   <Button
                       onClick={handleCouponCheck}
-                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-3"
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-3 shadow-lg"
                   >
                     별똥별 확인하기
                   </Button>
@@ -316,7 +368,7 @@ export default function MainPage() {
                     </div>
                     <Button
                         onClick={handleGoToCoupons}
-                        className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-8 py-3"
+                        className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-8 py-3 shadow-lg"
                     >
                       별 주으러 가기
                     </Button>
@@ -324,7 +376,10 @@ export default function MainPage() {
               )}
 
               {foundStars < 2 && (
-                  <Button onClick={() => setShowModal(false)} variant="outline">
+                  <Button
+                      onClick={() => setShowModal(false)}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold border-0"
+                  >
                     닫기
                   </Button>
               )}
